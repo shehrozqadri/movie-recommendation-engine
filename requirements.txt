@@ -9,5 +9,5 @@ dnspython>=2.3.0
 certifi>=2023.11.1
 # Required by `from dotenv import load_dotenv` in backend/main.py
 python-dotenv>=1.0.1
-# voyageai  # commented out to avoid Vercel lock errors during initial deploy
-# groq     # commented out to avoid Vercel lock errors during initial deploy
+voyageai
+groq
