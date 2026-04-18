@@ -33,12 +33,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ query, search_type: searchType })
             });
 
+            // Read raw response text first so we can gracefully handle non-JSON errors
+            const raw = await response.text();
             if (!response.ok) {
-                let errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to fetch recommendations');
+                try {
+                    const errorData = JSON.parse(raw);
+                    throw new Error(errorData.detail || JSON.stringify(errorData) || 'Failed to fetch recommendations');
+                } catch (e) {
+                    // fallback to plain text
+                    throw new Error(raw || 'Failed to fetch recommendations');
+                }
             }
 
-            const data = await response.json();
+            let data;
+            try {
+                data = JSON.parse(raw);
+            } catch (e) {
+                throw new Error('Invalid JSON response from server: ' + raw);
+            }
             
             // Render AI Response using marked.js
             aiResponseEl.innerHTML = marked.parse(data.recommendation);
@@ -139,8 +151,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ movie_id: movieId, question })
             });
 
-            if (!res.ok) throw new Error('Query failed');
-            const data = await res.json();
+            const rawText = await res.text();
+            if (!res.ok) {
+                try {
+                    const err = JSON.parse(rawText);
+                    throw new Error(err.detail || JSON.stringify(err) || 'Query failed');
+                } catch (e) {
+                    throw new Error(rawText || 'Query failed');
+                }
+            }
+
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                throw new Error('Invalid JSON response from server: ' + rawText);
+            }
             answerEl.innerHTML = marked.parse(data.answer);
             inputEl.value = ''; // clear input
         } catch (e) {
