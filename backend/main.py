@@ -1,16 +1,59 @@
 import os
-from fastapi import FastAPI, HTTPException
+import logging
+import traceback
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from pymongo import MongoClient
-import voyageai
 from bson.objectid import ObjectId
-from groq import Groq
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+
+# Optional external clients — import lazily and handle ImportError so the
+# Vercel function won't crash if packages aren't installed during the build.
+voyage_imported = False
+groq_imported = False
+vo = None
+groq_client = None
+try:
+    import voyageai
+    voyage_imported = True
+except Exception:
+    voyage_imported = False
+
+try:
+    from groq import Groq
+    groq_imported = True
+except Exception:
+    groq_imported = False
 from dotenv import load_dotenv
+import certifi
 
 load_dotenv()
 
 app = FastAPI()
+
+# Global exception handler to ensure tracebacks appear in Vercel logs
+@app.exception_handler(Exception)
+async def all_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    logging.error("Unhandled exception: %s", tb)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error", "error": str(exc)})
+
+
+@app.get("/api/health")
+async def health_check():
+    status = {"ready": True}
+    try:
+        if client:
+            # quick ping
+            client.admin.command('ping')
+            status["mongodb"] = "ok"
+        else:
+            status["mongodb"] = "unavailable"
+    except Exception as e:
+        status["mongodb"] = f"error: {e}"
+    return status
 
 # CORS for frontend
 app.add_middleware(
@@ -42,11 +85,16 @@ async def startup_db_client():
     global client, db, collection
     if MONGO_URI:
         try:
-            # Explicit TLS parameters help with some TLS negotiation environments.
-            client = MongoClient(MONGO_URI, tls=True, serverSelectionTimeoutMS=5000)
+            # Use certifi CA bundle to ensure a proper CA is available in the runtime.
+            # dnspython is required for mongodb+srv URIs (added in requirements).
+            client = MongoClient(
+                MONGO_URI,
+                tls=True,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=5000,
+            )
             db = client.sample_mflix
             collection = db.embedded_movies
-            # quick health check
             client.admin.command('ping')
         except Exception as e:
             print("Warning: Could not connect to MongoDB on startup:", e)
@@ -54,12 +102,25 @@ async def startup_db_client():
             collection = None
     else:
         collection = None
+    # Initialize external API clients if available and configured.
+    global vo, groq_client
+    if voyage_imported and VOYAGE_API_KEY:
+        try:
+            vo = voyageai.Client(api_key=VOYAGE_API_KEY)
+        except Exception as e:
+            print("Warning: voyageai client init failed:", e)
+            vo = None
 
-if VOYAGE_API_KEY:
-    vo = voyageai.Client(api_key=VOYAGE_API_KEY)
+    if groq_imported and GROQ_API_KEY:
+        try:
+            groq_client = Groq(api_key=GROQ_API_KEY)
+        except Exception as e:
+            print("Warning: groq client init failed:", e)
+            groq_client = None
 
-if GROQ_API_KEY:
-    groq_client = Groq(api_key=GROQ_API_KEY)
+# Note: clients `vo` and `groq_client` are initialized during the FastAPI
+# `startup` event above. Avoid initializing them at import time to prevent
+# crashes when optional packages are not installed or env vars are missing.
 
 class RecommendRequest(BaseModel):
     query: str
