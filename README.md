@@ -7,7 +7,6 @@ Movie recommendation web app powered by MongoDB Atlas vector search + LLM synthe
 - Semantic vector search using `plot_embedding_voyage_3_large`
 - Optional hybrid search (vector + Atlas Search text, fused with RRF)
 - Movie Q&A endpoint grounded in the movie plot
-- Frontend built with vanilla HTML/CSS/JS
 
 ## Tech Stack
 
@@ -15,7 +14,53 @@ Movie recommendation web app powered by MongoDB Atlas vector search + LLM synthe
 - Database: MongoDB Atlas (`sample_mflix.embedded_movies`)
 - Embeddings: Voyage AI (`voyage-3-large`)
 - LLM: Groq (`llama-3.1-8b-instant`)
-- Frontend: static files (`frontend/`)
+
+## Semantic Search Implementation
+
+Semantic search is implemented with a MongoDB aggregation pipeline using the Atlas `$vectorSearch` stage against the `vector_index`.
+
+Flow:
+
+1. User query is embedded with Voyage AI
+2. The embedding is sent to MongoDB Atlas Vector Search
+3. Top matching movies are returned with `vectorSearchScore`
+
+## Hybrid Search Implementation
+
+Hybrid search is implemented in two steps:
+
+1. A vector-search aggregation pipeline using `$vectorSearch`
+2. A keyword-search aggregation pipeline using Atlas `$search`
+
+The results are then merged in Python using **Reciprocal Rank Fusion (RRF)**.
+
+This means hybrid search is **not** a single MongoDB pipeline in this project; it is two retrieval pipelines combined in application code.
+
+## RAG Implementation
+
+This project uses a lightweight custom RAG flow and **does not use LangChain**.
+
+### Recommendation RAG
+
+1. Embed the user query with Voyage AI
+2. Retrieve relevant movies from MongoDB using semantic or hybrid search
+3. Build a prompt from the retrieved movie plots/titles
+4. Send that grounded context to Groq for the final recommendation response
+
+### Movie Q&A RAG
+
+For the movie Q&A feature:
+
+1. The selected movie document is fetched from MongoDB
+2. Its `fullplot` (or `plot`) is used as the only context
+3. Groq is prompted to answer using only that retrieved plot
+
+So the RAG layer here is implemented manually with:
+
+- MongoDB Atlas for retrieval
+- Voyage AI for embeddings
+- Groq for generation
+- FastAPI application logic for orchestration
 
 ---
 
@@ -64,14 +109,6 @@ Start backend:
 uvicorn backend.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-Start frontend static server:
-
-```bash
-python3 -m http.server 8080 --directory frontend
-```
-
-Open: `http://localhost:8080`
-
 Health check:
 
 ```bash
@@ -86,92 +123,17 @@ python run_semantic_search.py --query "space adventure movies" --limit 5
 
 ---
 
-## Deploy to Vercel (from scratch)
-
-### 1) Push latest code
-
-```bash
-git add .
-git commit -m "Prepare Vercel deployment"
-git push origin main
-```
-
-### 2) Install/login/link
-
-```bash
-npm i -g vercel
-vercel login
-vercel
-```
-
-### 3) Add environment variables in Vercel project
-
-Set these in **Project → Settings → Environment Variables**:
-
-- `MONGODB_URI`
-- `VOYAGE_API_KEY`
-- `GROQ_API_KEY`
-
-Use at least `Production` environment (and `Preview` if you test there).
-
-### 4) Deploy
-
-Either push to `main` (if repo connected), or run:
-
-```bash
-vercel --prod
-```
-
-### 5) Verify deployed API
-
-```bash
-curl -v https://<your-app-domain>/api/health
-curl -v -H "Content-Type: application/json" \
-	-d '{"query":"inception","search_type":"vector"}' \
-	https://<your-app-domain>/api/recommend
-```
-
----
-
 ## Troubleshooting
-
-### `FUNCTION_INVOCATION_FAILED`
-
-Fetch production logs:
-
-```bash
-vercel logs <deployment-url-or-id> \
-	--project <project-name> \
-	--environment production \
-	--since 1h \
-	--no-follow \
-	--expand
-```
 
 ### `ModuleNotFoundError: dotenv`
 
 Ensure `python-dotenv` is in `requirements.txt`.
 
-### `Voyage AI client not available`
-
-Ensure both are true:
-
-1. `voyageai` is installed (`requirements.txt`)
-2. `VOYAGE_API_KEY` is set in Vercel env vars
-
-### `DEPLOYMENT_NOT_FOUND`
-
-Usually wrong domain/alias. Verify active alias:
-
-```bash
-vercel inspect https://<your-domain>.vercel.app
-```
-
 ### MongoDB TLS/connection errors
 
 - Use `mongodb+srv://` URI
 - Keep `dnspython` + `certifi` installed
-- Ensure Atlas Network Access permits Vercel (use `0.0.0.0/0` temporarily while testing)
+- Ensure Atlas Network Access is configured correctly for your runtime environment
 
 ---
 
