@@ -1,7 +1,11 @@
-fastapi
-uvicorn
-pymongo
-voyageai
-groq
-python-dotenv
-pydantic
+fastapi==0.110.3
+# Pin pymongo to a modern version that supports current TLS behavior
+pymongo==4.4.0
+# Ensure `click` is new enough for `typer` (resolves Vercel uv lock conflict)
+click>=8.2.1
+# Required when using `mongodb+srv://` URIs
+dnspython>=2.3.0
+# Ensure CA bundle availability for TLS
+certifi>=2023.11.1
+# voyageai  # commented out to avoid Vercel lock errors during initial deploy
+# groq     # commented out to avoid Vercel lock errors during initial deploy

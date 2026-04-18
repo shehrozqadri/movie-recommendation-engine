@@ -29,12 +29,31 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not all([MONGO_URI, VOYAGE_API_KEY, GROQ_API_KEY]):
     print("Warning: Missing required environment variables. Please check your .env file.")
 
-if MONGO_URI:
-    client = MongoClient(MONGO_URI)
-    db = client.sample_mflix
-    collection = db.embedded_movies
-else:
-    collection = None
+client = None
+db = None
+collection = None
+
+
+@app.on_event("startup")
+async def startup_db_client():
+    """Initialize MongoDB client on startup. Don't fail the whole app if
+    the database is unreachable (prevents build-time or deploy-time failures).
+    """
+    global client, db, collection
+    if MONGO_URI:
+        try:
+            # Explicit TLS parameters help with some TLS negotiation environments.
+            client = MongoClient(MONGO_URI, tls=True, serverSelectionTimeoutMS=5000)
+            db = client.sample_mflix
+            collection = db.embedded_movies
+            # quick health check
+            client.admin.command('ping')
+        except Exception as e:
+            print("Warning: Could not connect to MongoDB on startup:", e)
+            client = None
+            collection = None
+    else:
+        collection = None
 
 if VOYAGE_API_KEY:
     vo = voyageai.Client(api_key=VOYAGE_API_KEY)
