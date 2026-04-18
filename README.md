@@ -1,13 +1,12 @@
 # AI Movie Recommendation Engine
 
-A highly advanced, fully-featured Retrieval-Augmented Generation (RAG) web application that recommends movies using both **Semantic Inference** and **Hybrid Search** logic, bundled in a cinematic, premium frontend UI inspired by Apple TV and Netflix.
+A highly advanced, fully-featured Retrieval-Augmented Generation (RAG) web application that recommends movies using both **Semantic Inference** and **Hybrid Search** logic.
 
 ## 🚀 Key Features
 
 *   **Semantic Vector Search**: Understands the "meaning" of a query (e.g. "a scary movie about a shark") using advanced mathematical embeddings rather than relying strictly on keyword matches.
 *   **Hybrid Search**: Uses Reciprocal Rank Fusion (RRF) to merge mathematical vector searches with exact keyword searches, maximizing relevance across highly specific names (e.g. "Christopher Nolan space thriller").
 *   **Deep Dive Q&A (RAG)**: A dedicated frosted glass UI model securely fetches the entire extended plot of a specific movie from the database and restricts the LLM to *only* synthesize answers directly from that verified source.
-*   **Ultra-Premium UX**: Edge-to-edge cinematic posters, dynamic hover drop shadows, and automatic stock photo fallback generation.
 
 ## 🛠️ Architecture & Tech Stack
 
