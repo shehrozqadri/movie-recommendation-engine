@@ -128,8 +128,14 @@ class RecommendRequest(BaseModel):
 
 @app.post("/api/recommend")
 async def recommend(req: RecommendRequest):
-    if collection is None or not VOYAGE_API_KEY or not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Server not configured properly with API keys.")
+    if collection is None:
+        raise HTTPException(status_code=500, detail="Server missing database connection (MONGO_URI / Atlas).")
+
+    if not (voyage_imported and vo):
+        raise HTTPException(status_code=500, detail="Voyage AI client not available. Ensure `voyageai` is installed and `VOYAGE_API_KEY` is set.")
+
+    if not (groq_imported and groq_client):
+        raise HTTPException(status_code=500, detail="Groq client not available. Ensure `groq` is installed and `GROQ_API_KEY` is set.")
 
     try:
         # 1. Embed query using Voyage AI
@@ -266,8 +272,11 @@ class AskRequest(BaseModel):
 
 @app.post("/api/movie/ask")
 async def ask_movie(req: AskRequest):
-    if collection is None or not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Server missing database or Groq configuration.")
+    if collection is None:
+        raise HTTPException(status_code=500, detail="Server missing database connection (MONGO_URI / Atlas).")
+
+    if not (groq_imported and groq_client):
+        raise HTTPException(status_code=500, detail="Groq client not available. Ensure `groq` is installed and `GROQ_API_KEY` is set.")
     try:
         movie = collection.find_one({"_id": ObjectId(req.movie_id)})
         if not movie:
