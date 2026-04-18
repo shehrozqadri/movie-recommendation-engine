@@ -1,0 +1,466 @@
+:root {
+    --bg-base: #050505;
+    --text-primary: #ffffff;
+    --text-secondary: #a3a3a3;
+    --accent: #e50914; /* Netflix red accent */
+    --accent-hover: #b81d24;
+    --glass-bg: rgba(20, 20, 20, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --apple-blue: #0A84FF;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 2rem;
+    background-image: radial-gradient(circle at 50% -20%, rgba(30,30,40, 0.8), var(--bg-base) 60%);
+    background-attachment: fixed;
+}
+
+/* Master Container */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    z-index: 10;
+    padding-top: 4rem;
+}
+
+/* Header */
+header {
+    text-align: center;
+    animation: fadeInDown 0.8s ease;
+}
+
+header h1 {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin-bottom: 0.5rem;
+}
+
+header h1 span {
+    background: linear-gradient(135deg, #ff0f7b, #f89b29);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+header p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+
+/* Search Area */
+.search-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.input-group {
+    display: flex;
+    width: 100%;
+    max-width: 700px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.input-group:focus-within {
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 0 4px rgba(255,255,255,0.05);
+}
+
+input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    padding: 0.8rem 1.5rem;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+input::placeholder {
+    color: #737373;
+}
+
+.input-group button {
+    background: var(--text-primary);
+    color: var(--bg-base);
+    border: none;
+    border-radius: 16px;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.input-group button:hover {
+    transform: scale(1.05);
+    background: #e5e5e5;
+}
+
+.input-group button:active {
+    transform: scale(0.95);
+}
+
+.input-group button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Toggle Switch (Apple Style) */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(20,20,20,0.5);
+    padding: 0.5rem 1.5rem;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+}
+
+.toggle-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 30px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--text-primary);
+    transition: .4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+input:checked + .slider {
+    background-color: var(--apple-blue);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.slider.round {
+    border-radius: 30px;
+}
+
+/* Loading */
+.hidden {
+    display: none !important;
+}
+
+#loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-top: 2rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--apple-blue);
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results Section */
+.results-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    animation: fadeIn 0.8s ease;
+}
+
+.ai-response {
+    background: rgba(30, 30, 30, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: #e5e5e5;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+/* Movie Grid - Cinematic Scale */
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* Poster Card (Netflix/Apple Style) */
+.movie-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    background-color: #1a1a1a;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.movie-poster {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    transition: transform 0.5s ease;
+}
+
+.movie-card:hover {
+    transform: scale(1.08) translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    z-index: 20;
+}
+
+.movie-card:hover .movie-poster {
+    transform: scale(1.05);
+}
+
+.movie-overlay {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 40%, transparent 100%);
+    padding: 1.5rem 1rem 1rem 1rem;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: all 0.3s;
+}
+
+.movie-title {
+    font-weight: 800;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.movie-year {
+    color: #a3a3a3;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.score-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.movie-plot {
+    display: none; /* Hide standard plot in poster mode, or show on hover? Let's hide to keep it clean like Apple TV */
+}
+
+/* Ask Me Button Overlay */
+.ask-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    height: 40px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.movie-card:hover .ask-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ask-btn:hover {
+    background: #ffffff;
+    color: #000;
+}
+
+/* Movie Q&A Sliding Frosted Glass Modal */
+.movie-qna {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80%; /* Takes up most of the card */
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    z-index: 10;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.movie-qna.active {
+    transform: translateY(0);
+}
+
+.close-qna {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.close-qna:hover {
+    color: #fff;
+}
+
+.qna-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.qna-input-group input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 0.6rem;
+    color: #fff;
+}
+
+.qna-input-group button {
+    width: 60px;
+    background: var(--apple-blue);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.qna-answer {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    background: transparent;
+    overflow-y: auto;
+    padding-right: 5px;
+    line-height: 1.5;
+}
+
+.qna-answer::-webkit-scrollbar {
+    width: 4px;
+}
+.qna-answer::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

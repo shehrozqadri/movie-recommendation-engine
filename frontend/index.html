@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Movie Recommender</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob shape1"></div>
+        <div class="blob shape2"></div>
+        <div class="blob shape3"></div>
+    </div>
+    
+    <div class="container glass-panel">
+        <header>
+            <h1>CineSearch <span>AI</span></h1>
+            <p>Discover movies through natural language.</p>
+        </header>
+
+        <section class="search-section">
+            <div class="input-group">
+                <input type="text" id="query-input" placeholder="e.g. A sci-fi movie about time travel..." autocomplete="off">
+                <button id="search-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Vector Search</span>
+                <label class="switch">
+                    <input type="checkbox" id="search-mode-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Hybrid Search</span>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing movies...</p>
+            </div>
+        </section>
+
+        <section class="results-section hidden" id="results-section">
+            <div class="ai-response glass-panel-inner" id="ai-response">
+                <!-- Groq response here -->
+            </div>
+            <div class="movies-grid" id="movies-grid">
+                <!-- Movie cards go here -->
+            </div>
+        </section>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
