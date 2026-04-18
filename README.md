@@ -15,6 +15,34 @@ Movie recommendation web app powered by MongoDB Atlas vector search + LLM synthe
 - Embeddings: Voyage AI (`voyage-3-large`)
 - LLM: Groq (`llama-3.1-8b-instant`)
 
+## Architecture Diagram
+
+```text
+User Query
+	|
+	v
+FastAPI Backend
+	|
+	+--> Voyage AI Embedding
+	|        |
+	|        v
+	|   Query Vector
+	|        |
+	|        v
+	+--> MongoDB Atlas
+	|      - Vector Search (`$vectorSearch`)
+	|      - Atlas Search (`$search`, optional)
+	|
+	v
+Retrieved Movie Context
+	|
+	v
+Groq LLM
+	|
+	v
+Recommendation / Movie Q&A Response
+```
+
 ## Semantic Search Implementation
 
 Semantic search is implemented with a MongoDB aggregation pipeline using the Atlas `$vectorSearch` stage against the `vector_index`.
@@ -24,6 +52,31 @@ Flow:
 1. User query is embedded with Voyage AI
 2. The embedding is sent to MongoDB Atlas Vector Search
 3. Top matching movies are returned with `vectorSearchScore`
+
+Sample pipeline:
+
+```json
+[
+	{
+		"$vectorSearch": {
+			"index": "vector_index",
+			"path": "plot_embedding_voyage_3_large",
+			"queryVector": ["<embedding-vector-here>"],
+			"numCandidates": 100,
+			"limit": 5
+		}
+	},
+	{
+		"$project": {
+			"_id": 0,
+			"title": 1,
+			"year": 1,
+			"plot": 1,
+			"score": { "$meta": "vectorSearchScore" }
+		}
+	}
+]
+```
 
 ## Hybrid Search Implementation
 
@@ -35,6 +88,61 @@ Hybrid search is implemented in two steps:
 The results are then merged in Python using **Reciprocal Rank Fusion (RRF)**.
 
 This means hybrid search is **not** a single MongoDB pipeline in this project; it is two retrieval pipelines combined in application code.
+
+Sample vector branch:
+
+```json
+[
+	{
+		"$vectorSearch": {
+			"index": "vector_index",
+			"path": "plot_embedding_voyage_3_large",
+			"queryVector": ["<embedding-vector-here>"],
+			"numCandidates": 100,
+			"limit": 10
+		}
+	},
+	{
+		"$project": {
+			"_id": 1,
+			"title": 1,
+			"plot": 1,
+			"year": 1,
+			"poster": 1,
+			"score": { "$meta": "vectorSearchScore" }
+		}
+	}
+]
+```
+
+Sample Atlas Search branch:
+
+```json
+[
+	{
+		"$search": {
+			"index": "movies_search_index",
+			"text": {
+				"query": "space adventure movies",
+				"path": ["title", "plot", "fullplot"]
+			}
+		}
+	},
+	{ "$limit": 10 },
+	{
+		"$project": {
+			"_id": 1,
+			"title": 1,
+			"plot": 1,
+			"year": 1,
+			"poster": 1,
+			"score": { "$meta": "searchScore" }
+		}
+	}
+]
+```
+
+Those two result sets are fused in Python with RRF rather than combined with `$unionWith`.
 
 ## RAG Implementation
 
