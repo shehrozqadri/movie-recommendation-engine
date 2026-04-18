@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiResponseEl = document.getElementById('ai-response');
     const moviesGridEl = document.getElementById('movies-grid');
 
+    // Dynamic API URL resolving to support both local dev and Vercel Deployment
+    const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:8001'
+        : '';
+
     const handleSearch = async () => {
         const query = queryInput.value.trim();
         if (!query) return;
@@ -19,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Read toggle state
             const searchType = document.getElementById('search-mode-toggle').checked ? 'hybrid' : 'vector';
             
-            // Assuming the FastAPI backend is running locally on port 8001
-            const response = await fetch('http://localhost:8001/api/recommend', {
+            // Fetch recommendations targeting dynamic URL resolution
+            const response = await fetch(`${API_BASE_URL}/api/recommend`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -128,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         answerEl.innerHTML = '<span style="color: #0A84FF;">Synthesizing answer from plot...</span>';
 
         try {
-            const res = await fetch('http://localhost:8001/api/movie/ask', {
+            const res = await fetch(`${API_BASE_URL}/api/movie/ask`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ movie_id: movieId, question })
