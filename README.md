@@ -1,30 +1,35 @@
 # AI Movie Recommendation Engine
 
-A highly advanced, fully-featured Retrieval-Augmented Generation (RAG) web application that recommends movies using both **Semantic Inference** and **Hybrid Search** logic.
+Movie recommendation web app powered by MongoDB Atlas vector search + LLM synthesis.
 
-## 🚀 Key Features
+## Features
 
-*   **Semantic Vector Search**: Understands the "meaning" of a query (e.g. "a scary movie about a shark") using advanced mathematical embeddings rather than relying strictly on keyword matches.
-*   **Hybrid Search**: Uses Reciprocal Rank Fusion (RRF) to merge mathematical vector searches with exact keyword searches, maximizing relevance across highly specific names (e.g. "Christopher Nolan space thriller").
-*   **Deep Dive Q&A (RAG)**: A dedicated frosted glass UI model securely fetches the entire extended plot of a specific movie from the database and restricts the LLM to *only* synthesize answers directly from that verified source.
+- Semantic vector search using `plot_embedding_voyage_3_large`
+- Optional hybrid search (vector + Atlas Search text, fused with RRF)
+- Movie Q&A endpoint grounded in the movie plot
+- Frontend built with vanilla HTML/CSS/JS
 
-## 🛠️ Architecture & Tech Stack
+## Tech Stack
 
-*   **Database**: MongoDB Atlas (`sample_mflix.embedded_movies` dataset)
-*   **Vector Embeddings**: Voyage AI (`voyage-3-large`)
-*   **Generative AI (LLM)**: Groq API (`llama-3.1-8b-instant`)
-*   **Backend Framework**: FastAPI (Python)
-*   **Frontend**: Vanilla HTML / CSS / Vanilla JS (No bloated dependencies)
+- Backend: FastAPI
+- Database: MongoDB Atlas (`sample_mflix.embedded_movies`)
+- Embeddings: Voyage AI (`voyage-3-large`)
+- LLM: Groq (`llama-3.1-8b-instant`)
+- Frontend: static files (`frontend/`)
 
 ---
 
-## 💻 Local Setup Instructions
+## Local Setup
 
-### 1. Prerequisites
-You will need a minimum of Python 3.9+ and active accounts for MongoDB Atlas, Voyage AI, and Groq.
+### 1) Prerequisites
 
-### 2. Environment Variables
-Clone the repository and create a hidden `.env` file in the root directory. You must supply your own active API keys:
+- Python 3.9+
+- MongoDB Atlas cluster with `sample_mflix` loaded
+- Voyage + Groq API keys
+
+### 2) Environment Variables
+
+Create a `.env` file in repo root:
 
 ```ini
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/...
@@ -32,36 +37,142 @@ VOYAGE_API_KEY=pa-...
 GROQ_API_KEY=gsk_...
 ```
 
-### 3. Install Dependencies
-Spin up a Python virtual environment to isolate the packages:
+### 3) Install
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Database Initialization (Crucial)
-Because this application runs off the **MongoDB sample dataset**, you must ensure your Atlas Cluster has loaded the `sample_mflix` database.
+### 4) Required Atlas Indexes
 
-You must then manually create **two** indexes in your MongoDB Atlas Dashboard:
+1. Vector index: `vector_index`
+	 - Collection: `sample_mflix.embedded_movies`
+	 - Path: `plot_embedding_voyage_3_large`
+	 - Dimensions: `2048`
 
-**A. Vector Search Index (`vector_index`)**
-Create an Atlas Vector Search index on the `embedded_movies` collection targeting the `plot_embedding_voyage_3_large` field (2048 dimensions).
+2. Atlas Search index: `movies_search_index`
+	 - Collection: `sample_mflix.embedded_movies`
+	 - Dynamic mapping enabled
 
-**B. Keyword Search Index (`movies_search_index`)**
-Create a standard Atlas Search Index (Visual Editor) using "Dynamic Mapping" on the `embedded_movies` collection. This allows the backend to perform the Hybrid Search text matching.
+### 5) Run locally
 
-### 5. Start the Application
-Boot up the Python FastAPI backend:
+Start backend:
+
 ```bash
-uvicorn backend.main:app --reload --port 8001
+uvicorn backend.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-Boot up the Frontend (using any static HTTP server, like `npx` or Python's `http.server`):
+Start frontend static server:
+
 ```bash
-python3 -m http.server 3005 -d frontend
+python3 -m http.server 8080 --directory frontend
 ```
-Navigate to `http://localhost:3005` inside your web browser to enjoy the cinematic engine!
+
+Open: `http://localhost:8080`
+
+Health check:
+
+```bash
+curl -v http://127.0.0.1:8001/api/health
+```
+
+Run simple semantic search script:
+
+```bash
+python run_semantic_search.py --query "space adventure movies" --limit 5
+```
 
 ---
-*Built with ❤️ in 2026 as an exploration into agentic programming and vector-driven architecture.*
+
+## Deploy to Vercel (from scratch)
+
+### 1) Push latest code
+
+```bash
+git add .
+git commit -m "Prepare Vercel deployment"
+git push origin main
+```
+
+### 2) Install/login/link
+
+```bash
+npm i -g vercel
+vercel login
+vercel
+```
+
+### 3) Add environment variables in Vercel project
+
+Set these in **Project → Settings → Environment Variables**:
+
+- `MONGODB_URI`
+- `VOYAGE_API_KEY`
+- `GROQ_API_KEY`
+
+Use at least `Production` environment (and `Preview` if you test there).
+
+### 4) Deploy
+
+Either push to `main` (if repo connected), or run:
+
+```bash
+vercel --prod
+```
+
+### 5) Verify deployed API
+
+```bash
+curl -v https://<your-app-domain>/api/health
+curl -v -H "Content-Type: application/json" \
+	-d '{"query":"inception","search_type":"vector"}' \
+	https://<your-app-domain>/api/recommend
+```
+
+---
+
+## Troubleshooting
+
+### `FUNCTION_INVOCATION_FAILED`
+
+Fetch production logs:
+
+```bash
+vercel logs <deployment-url-or-id> \
+	--project <project-name> \
+	--environment production \
+	--since 1h \
+	--no-follow \
+	--expand
+```
+
+### `ModuleNotFoundError: dotenv`
+
+Ensure `python-dotenv` is in `requirements.txt`.
+
+### `Voyage AI client not available`
+
+Ensure both are true:
+
+1. `voyageai` is installed (`requirements.txt`)
+2. `VOYAGE_API_KEY` is set in Vercel env vars
+
+### `DEPLOYMENT_NOT_FOUND`
+
+Usually wrong domain/alias. Verify active alias:
+
+```bash
+vercel inspect https://<your-domain>.vercel.app
+```
+
+### MongoDB TLS/connection errors
+
+- Use `mongodb+srv://` URI
+- Keep `dnspython` + `certifi` installed
+- Ensure Atlas Network Access permits Vercel (use `0.0.0.0/0` temporarily while testing)
+
+---
+
+Built in 2026.
