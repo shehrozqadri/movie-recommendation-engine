@@ -1,13 +1,9 @@
 fastapi==0.110.3
-# Pin pymongo to a modern version that supports current TLS behavior
-pymongo==4.4.0
-# Ensure `click` is new enough for `typer` (resolves Vercel uv lock conflict)
-click>=8.2.1
-# Required when using `mongodb+srv://` URIs
-dnspython>=2.3.0
-# Ensure CA bundle availability for TLS
-certifi>=2023.11.1
-# Required by `from dotenv import load_dotenv` in backend/main.py
+uvicorn==0.29.0
+pymongo[srv]==4.7.2
+click>=8.1.7
+dnspython>=2.6.1
+certifi>=2024.2.2
 python-dotenv>=1.0.1
-voyageai
-groq
+voyageai>=0.2.3
+groq>=0.5.0

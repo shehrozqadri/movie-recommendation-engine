@@ -154,7 +154,7 @@ async def recommend(req: RecommendRequest):
         vector_pipeline = [
             {
                 "$vectorSearch": {
-                    "index": "vector_index", 
+                    "index": "vector_index_2", 
                     "path": "plot_embedding_voyage_3_large", 
                     "queryVector": query_embedding,
                     "numCandidates": 100,
