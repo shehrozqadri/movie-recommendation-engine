@@ -184,7 +184,8 @@ async def recommend(req: RecommendRequest):
                         "index": "movies_search_index",
                         "text": {
                             "query": req.query,
-                            "path": ["title", "plot", "fullplot"]
+                            "path": ["title", "plot", "fullplot"],
+                            "fuzzy": {}
                         }
                     }
                 },
